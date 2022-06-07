@@ -2,7 +2,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.597"]
                  [reagent "0.10.0"]
-                 [figwheel "0.5.19"]]
+                 [figwheel "0.5.19"]
+                 [figwheel-sidecar "0.5.19"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-figwheel "0.5.19"]]
@@ -22,7 +23,8 @@
                                           :elide-asserts true
                                           :pretty-print false}}}}}}
 
-  :figwheel {:repl false
+  :figwheel {:repl true
+             :nrepl-port 7002
              :http-server-root "public"}
 
   :cljsbuild {:builds {:client
