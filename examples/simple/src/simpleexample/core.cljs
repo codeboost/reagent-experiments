@@ -1,7 +1,9 @@
 (ns simpleexample.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [simpleexample.core-v2 :as v2]
+            [simpleexample.core-v3 :as v3]))
 
 (defonce timer (r/atom (js/Date.)))
 
@@ -28,9 +30,18 @@
 
 (defn simple-example []
   [:div
-   [greeting "Hello world, it is now"]
+   [greeting "1. Hello world, it is now"]
    [clock]
    [color-input]])
 
+(defn  composite-component []
+  [:div
+   [simple-example]
+   [:hr]
+   [v2/simple-example]
+
+   [:hr]
+   [v3/simple-example]])
+
 (defn ^:export run []
-  (rdom/render [simple-example] (js/document.getElementById "app")))
+  (rdom/render [composite-component] (js/document.getElementById "app")))
