@@ -23,3 +23,15 @@
     {:set-color!     #(set-color! state %)
      :color          (reaction (:color @state))
      :formatted-time (reaction (format-date (:date @state)))}))
+
+
+
+
+
+
+
+(comment
+  (defn state-controller [props]
+    (let [state (r/atom {:username (:username props)})]
+      {:set-username! #(swap! state assoc :username (-> % .-target .-value))
+       :username      (reaction (:username @state))})))
