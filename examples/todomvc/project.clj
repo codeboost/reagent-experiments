@@ -14,7 +14,12 @@
                    {:builds {:client
                              {:figwheel {:on-jsload "todomvc.core/run"}
                               :compiler {:main "todomvc.core"
-                                         :optimizations :none}}}}}
+                                         :optimizations :none}}}}
+                   :dependencies [[binaryage/devtools "1.0.0"]
+                                  [cider/piggieback "0.5.2"]
+                                  [figwheel-sidecar "0.5.19"]
+                                  [nrepl "0.8.3"]]
+                   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
 
              :prod {:cljsbuild
                     {:builds {:client
@@ -22,7 +27,8 @@
                                           :elide-asserts true
                                           :pretty-print false}}}}}}
 
-  :figwheel {:repl false
+  :figwheel {:repl true
+             :nrepl-port 7003
              :http-server-root "public"}
 
   :cljsbuild {:builds {:client
