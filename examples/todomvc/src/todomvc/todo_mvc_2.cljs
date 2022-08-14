@@ -41,6 +41,11 @@
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))
 
+(defn remove-done [m]
+  (into {}
+    (filter (fn [[k v]]
+              (not (:done v))) m)))
+
 (defn todo-app-state [props]
   (let [state (r/atom {:todos      {}
                        :id-counter 0
@@ -53,12 +58,7 @@
                        (swap! state update :todos #(dissoc % id)))
 
         clear-done!  (fn []
-                       (swap! state update :todos (fn [todos]
-                                                    (->>
-                                                      todos
-                                                      (map (fn [[k v]]
-                                                             [k (filter (complement :done) v)]))
-                                                      (into {})))))
+                       (swap! state update :todos remove-done))
         items (reaction (-> @state :todos vals))
         num-done (reaction (->> @items (filter :done) count))
         current-filter (reaction (:current-filter @state))]
@@ -67,7 +67,7 @@
      :num-done     num-done
      :num-active   (reaction (- (count @items) @num-done))
 
-     :current-filter @current-filter
+     :current-filter current-filter
      :filtered-items (reaction
                        (filter
                          (case @current-filter
@@ -90,16 +90,20 @@
 
 (comment
   (let [{:keys [add-todo! items empty-todos? num-active toggle-todo! set-filter!
-                current-filter filtered-items] :as app-state} (todo-app-state {})]
+                current-filter filtered-items
+                clear-done!] :as app-state} (todo-app-state {})]
 
 
     (add-todo! "Hello")
     (add-todo! "World")
 
     (toggle-todo! 2)
-    (set-filter! :done)
 
-    @filtered-items))
+    (clear-done!)
+
+
+
+    #_@items))
 
 
 (defn todo-item-state [{:keys [toggle-todo! delete-todo! save-todo!]} id]
@@ -137,7 +141,7 @@
                           clear-done!]}]
   (let [props-for (fn [name]
                     {:class (if (= name @current-filter) "selected")
-                     :on-click set-current-filter!})]
+                     :on-click #(set-current-filter! name)})]
     [:div
      [:span#todo-count
       [:strong @num-active] " " (case @num-active 1 "item" "items") " left"]
@@ -170,8 +174,8 @@
              [:ul#todo-list
               (for [todo @filtered-items]
                 ^{:key (:id todo)} [todo-item app-state todo])]]
-            #_[:footer#footer
-               [todo-stats app-state]]])]]
+            [:footer#footer
+             [todo-stats app-state]]])]]
 
        [:footer#info
         [:p "Double-click to edit a todo"]]])))
