@@ -29,7 +29,8 @@
 
   :figwheel {:repl true
              :nrepl-port 7003
-             :http-server-root "public"}
+             :http-server-root "public"
+             :server-port 3500}
 
   :cljsbuild {:builds {:client
                        {:source-paths ["src"]

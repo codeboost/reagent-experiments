@@ -1,7 +1,8 @@
 (ns todomvc.core
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [todomvc.todo-mvc-2 :as v2]))
 
 (defonce todos (r/atom (sorted-map)))
 
@@ -106,5 +107,11 @@
          [:footer#info
           [:p "Double-click to edit a todo"]]]))))
 
+(defn todo-app-combined []
+  [:div
+   [todo-app]
+   [:hr]
+   [v2/todo-app]])
+
 (defn ^:export run []
-  (rdom/render [todo-app] (js/document.getElementById "app")))
+  (rdom/render [todo-app-combined] (js/document.getElementById "app")))
