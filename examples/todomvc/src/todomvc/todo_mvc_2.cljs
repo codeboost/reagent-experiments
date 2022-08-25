@@ -1,12 +1,27 @@
 (ns todomvc.todo-mvc-2
   (:require
+    [cljs.spec.alpha :as s]
     [reagent.dom :as rdom]
     [todomvc.todo-mvc-2-state :as v2s]))
 
+
+(s/def ::placeholder string?)
+(s/def ::class (s/or :keyword keyword? :string string?))
+
+(s/def ::todo-input-props (s/keys :req-un []
+                                  :opt-un [::id ::placeholder ::class]))
+
+(s/fdef todo-input*
+  :args (s/cat :props ::todo-input-props
+               :state ::v2s/todo-input-state)
+  :ret vector?)
+
 ;;F1 component, Unit testable
-(defn todo-input- [{:keys [id class placeholder]} {:keys [text on-input-blur on-input-changed on-input-key-down]}]
-  [:input {:type        "text" :value @text
-           :id          id :class class :placeholder placeholder
+(defn todo-input* [{:keys [id class placeholder]} {:keys [text on-input-blur on-input-changed on-input-key-down] :as state}]
+  [:input {:type        "text"
+           :value       @text
+           :id          id
+           :class       class :placeholder placeholder
            :on-blur     on-input-blur
            :on-change   on-input-changed
            :on-key-down on-input-key-down}])
@@ -15,7 +30,7 @@
 (defn todo-input [props]
   (let [state (v2s/todo-input-state props)]
     (fn [props]
-      [todo-input- props state])))
+      [todo-input* props state])))
 
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))
@@ -25,13 +40,14 @@
   [:li {:class (str (if done "completed ")
                     (if @editing? "editing"))}
    [:div.view
-    [:input.toggle {:type "checkbox"
-                    :checked done
+    [:input.toggle {:type      "checkbox"
+                    :checked   done
                     :on-change toggle!}]
     [:label {:on-double-click set-editing!} title]
     [:button.destroy {:on-click delete!}]]
    (when @editing?
-     [todo-edit {:class   "edit" :title title
+     [todo-edit {:class   "edit"
+                 :title title
                  :on-save save!
                  :on-stop stop-editing!}])])
 
@@ -65,7 +81,8 @@
          [:h1 "todos"]
          [todo-input {:id          "new-todo"
                       :placeholder "What needs to be done?"
-                      :on-save     add-todo!}]
+                      :on-save     add-todo!
+                      :on-stop     #()}]
 
          (when-not @empty-todos?
            [:div

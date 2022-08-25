@@ -2,11 +2,14 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]
             [clojure.string :as str]
-            [todomvc.todo-mvc-2 :as v2]))
+            [todomvc.todo-mvc-2 :as v2]
+            [cljs.spec.test.alpha :as ts]))
 
 (defonce todos (r/atom (sorted-map)))
 
 (defonce counter (r/atom 0))
+
+(ts/instrument)
 
 (defn add-todo [text]
   (let [id (swap! counter inc)]

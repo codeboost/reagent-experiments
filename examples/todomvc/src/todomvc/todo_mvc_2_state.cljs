@@ -1,10 +1,33 @@
 (ns todomvc.todo-mvc-2-state
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [reagent.ratom :refer [reaction]]
-            [clojure.string :as str]))
+  (:require
+    [cljs.spec.alpha :as s]
+    [reagent.core :as r]
+    [reagent.dom :as rdom]
+    [reagent.ratom :refer [reaction]]
+    [clojure.string :as str]))
 
-(defn todo-input-state [{:keys [title on-stop on-save]}]
+(s/def ::on-input-blur fn?)
+(s/def ::on-input-changed fn?)
+(s/def ::on-input-key-down fn?)
+(s/def ::set-text! fn?)
+(s/def ::text #(satisfies? IDeref %))
+(s/def ::on-save fn?)
+(s/def ::on-stop fn?)
+
+(s/def ::todo-input-state (s/keys :req-un [::on-input-blur
+                                           ::on-input-changed
+                                           ::on-input-key-down
+                                           ::set-text!
+                                           ::text]))
+
+(s/def ::todo-input-props (s/keys :req-un [::on-save ::on-stop]))
+
+(s/fdef todo-input-state
+        :args (s/cat :props ::todo-input-props)
+        :ret ::todo-input-state)
+
+
+(defn todo-input-state [{:keys [on-stop on-save]}]
   (let [state (r/atom {})
         set-text! #(swap! state assoc :text %)
         stop! (fn []
