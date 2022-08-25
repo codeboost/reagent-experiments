@@ -2,27 +2,13 @@
   (:require
     [cljs.spec.alpha :as s]
     [reagent.core :as r]
-    [reagent.dom :as rdom]
+    [todomvc.todo-mvc-2-spec :as v2-spec]
     [reagent.ratom :refer [reaction]]
     [clojure.string :as str]))
 
-(s/def ::set-text! fn?)
-(s/def ::save! fn?)
-(s/def ::stop! fn?)
-(s/def ::text #(satisfies? IDeref %))
-(s/def ::on-save fn?)
-(s/def ::on-stop fn?)
-
-(s/def ::todo-input-state (s/keys :req-un [::set-text!
-                                           ::text
-                                           ::save!
-                                           ::stop!]))
-
-(s/def ::todo-input-props (s/keys :req-un [::on-save ::on-stop]))
-
 (s/fdef todo-input-state
-        :args (s/cat :props ::todo-input-props)
-        :ret ::todo-input-state)
+        :args (s/cat :props ::v2-spec/todo-input-props)
+        :ret ::v2-spec/todo-input-state)
 
 (defn todo-input-state [{:keys [on-stop on-save]}]
   (let [state (r/atom {})
@@ -33,9 +19,9 @@
                   (on-stop)))
         save! (fn []
                 (let [v (-> @state :text str str/trim)]
-                  (if-not (empty? v) (on-save v))
+                  (when-not (empty? v)
+                    (on-save v))
                   (stop!)))]
-
     {:set-text! set-text!
      :text      (reaction (:text @state))
      :save!     save!
