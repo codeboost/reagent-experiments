@@ -20,21 +20,24 @@
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))
 
-(defn todo-item [app-state item]
-  (let [{:keys [editing? set-editing! toggle! delete! save! stop-editing!]} (v2s/todo-item-state app-state item)]
-    (fn [_ {:keys [id done title]}]
-      [:li {:class (str (if done "completed ")
-                        (if @editing? "editing"))}
-       [:div.view
-        [:input.toggle {:type "checkbox"
-                        :checked done
-                        :on-change toggle!}]
-        [:label {:on-double-click set-editing!} title]
-        [:button.destroy {:on-click delete!}]]
-       (when @editing?
-         [todo-edit {:class   "edit" :title title
-                     :on-save save!
-                     :on-stop stop-editing!}])])))
+
+(defn todo-item* [{:keys [id done title]} {:keys [editing? set-editing! toggle! delete! save! stop-editing!]}]
+  [:li {:class (str (if done "completed ")
+                    (if @editing? "editing"))}
+   [:div.view
+    [:input.toggle {:type "checkbox"
+                    :checked done
+                    :on-change toggle!}]
+    [:label {:on-double-click set-editing!} title]
+    [:button.destroy {:on-click delete!}]]
+   (when @editing?
+     [todo-edit {:class   "edit" :title title
+                 :on-save save!
+                 :on-stop stop-editing!}])])
+
+(defn todo-item [item app-state]
+  (let [state (v2s/todo-item-state app-state item)]
+    [todo-item* item state]))
 
 (defn todo-stats [{:keys [current-filter set-current-filter! num-active num-done
                           clear-done!]}]
@@ -60,9 +63,9 @@
        [:section#todoapp
         [:header#header
          [:h1 "todos"]
-         [todo-input-f2 {:id          "new-todo"
-                         :placeholder "What needs to be done?"
-                         :on-save     add-todo!}]
+         [todo-input {:id          "new-todo"
+                      :placeholder "What needs to be done?"
+                      :on-save     add-todo!}]
 
          (when-not @empty-todos?
            [:div
@@ -72,7 +75,7 @@
              [:label {:for "toggle-all"} "Mark all as complete"]
              [:ul#todo-list
               (for [todo @filtered-items]
-                ^{:key (:id todo)} [todo-item app-state todo])]]
+                ^{:key (:id todo)} [todo-item todo app-state])]]
             [:footer#footer
              [todo-stats app-state]]])]]
 
