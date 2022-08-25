@@ -7,6 +7,16 @@
 
 (s/def ::placeholder string?)
 (s/def ::class (s/or :keyword keyword? :string string?))
+(s/def ::on-input-blur fn?)
+(s/def ::on-input-changed fn?)
+(s/def ::on-input-key-down fn?)
+
+(s/def ::todo-input-state (s/keys
+                            :req-un [::on-input-blur
+                                     ::on-input-changed
+                                     ::on-input-key-down
+                                     ::v2s/text
+                                     ::v2s/set-text!]))
 
 (s/def ::todo-input-props (s/keys :req-un []
                                   :opt-un [::id ::placeholder ::class]))
@@ -21,16 +31,29 @@
   [:input {:type        "text"
            :value       @text
            :id          id
-           :class       class :placeholder placeholder
+           :class       class
+           :placeholder placeholder
            :on-blur     on-input-blur
            :on-change   on-input-changed
            :on-key-down on-input-key-down}])
+
+;;Exposes DOM event handlers which extract the event values and call
+;;functions on the state interface.
+(defn input-state-adapter [{:keys [set-text! save! stop!] :as state}]
+  (assoc state
+    :on-input-changed #(set-text! (-> % .-target .-value))
+    :on-input-blur save!
+    :on-input-key-down (fn [e]
+                         (case (.-which e)
+                           13 (save!)
+                           27 (stop!)
+                           nil))))
 
 ;;F2 component
 (defn todo-input [props]
   (let [state (v2s/todo-input-state props)]
     (fn [props]
-      [todo-input* props state])))
+      [todo-input* props (input-state-adapter state)])))
 
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))

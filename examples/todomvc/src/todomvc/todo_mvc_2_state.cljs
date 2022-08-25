@@ -6,26 +6,23 @@
     [reagent.ratom :refer [reaction]]
     [clojure.string :as str]))
 
-(s/def ::on-input-blur fn?)
-(s/def ::on-input-changed fn?)
-(s/def ::on-input-key-down fn?)
 (s/def ::set-text! fn?)
+(s/def ::save! fn?)
+(s/def ::stop! fn?)
 (s/def ::text #(satisfies? IDeref %))
 (s/def ::on-save fn?)
 (s/def ::on-stop fn?)
 
-(s/def ::todo-input-state (s/keys :req-un [::on-input-blur
-                                           ::on-input-changed
-                                           ::on-input-key-down
-                                           ::set-text!
-                                           ::text]))
+(s/def ::todo-input-state (s/keys :req-un [::set-text!
+                                           ::text
+                                           ::save!
+                                           ::stop!]))
 
 (s/def ::todo-input-props (s/keys :req-un [::on-save ::on-stop]))
 
 (s/fdef todo-input-state
         :args (s/cat :props ::todo-input-props)
         :ret ::todo-input-state)
-
 
 (defn todo-input-state [{:keys [on-stop on-save]}]
   (let [state (r/atom {})
@@ -37,20 +34,12 @@
         save! (fn []
                 (let [v (-> @state :text str str/trim)]
                   (if-not (empty? v) (on-save v))
-                  (stop!)))
-        on-key-down (fn [e]
-                      (case (.-which e)
-                        13 (save!)
-                        27 (stop!)
-                        nil))
-        on-input-changed #(set-text! (-> % .-target .-value))]
+                  (stop!)))]
 
-    {:set-text!         set-text!
-     :text              (reaction (:text @state))
-     ;;DOM handlers
-     :on-input-blur     save!
-     :on-input-changed  on-input-changed
-     :on-input-key-down on-key-down}))
+    {:set-text! set-text!
+     :text      (reaction (:text @state))
+     :save!     save!
+     :stop!     stop!}))
 
 (defn remove-done [m]
   (into {}
