@@ -3,21 +3,25 @@
     [reagent.dom :as rdom]
     [todomvc.todo-mvc-2-state :as v2s]))
 
+;;F1 component, Unit testable
+(defn todo-input- [{:keys [id class placeholder]} {:keys [text on-input-blur on-input-changed on-input-key-down]}]
+  [:input {:type        "text" :value @text
+           :id          id :class class :placeholder placeholder
+           :on-blur     on-input-blur
+           :on-change   on-input-changed
+           :on-key-down on-input-key-down}])
 
-(defn todo-input [{:keys [title on-save on-stop] :as props}]
-  (let [{:keys [text on-input-blur on-input-changed on-input-key-down]} (v2s/todo-input-state props)]
-    (fn [{:keys [id class placeholder]}]
-      [:input {:type        "text" :value @text
-               :id          id :class class :placeholder placeholder
-               :on-blur     on-input-blur
-               :on-change   on-input-changed
-               :on-key-down on-input-key-down}])))
+;;F2 component
+(defn todo-input [props]
+  (let [state (v2s/todo-input-state props)]
+    (fn [props]
+      [todo-input- props state])))
 
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))
 
-(defn todo-item [app-state {:keys [id done title]}]
-  (let [{:keys [editing? set-editing! toggle! delete! save! stop-editing!]} (v2s/todo-item-state app-state id)]
+(defn todo-item [app-state item]
+  (let [{:keys [editing? set-editing! toggle! delete! save! stop-editing!]} (v2s/todo-item-state app-state item)]
     (fn [_ {:keys [id done title]}]
       [:li {:class (str (if done "completed ")
                         (if @editing? "editing"))}
@@ -56,9 +60,9 @@
        [:section#todoapp
         [:header#header
          [:h1 "todos"]
-         [todo-input {:id          "new-todo"
-                      :placeholder "What needs to be done?"
-                      :on-save     add-todo!}]
+         [todo-input-f2 {:id          "new-todo"
+                         :placeholder "What needs to be done?"
+                         :on-save     add-todo!}]
 
          (when-not @empty-todos?
            [:div

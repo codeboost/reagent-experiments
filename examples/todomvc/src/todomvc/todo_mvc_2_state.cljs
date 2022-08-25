@@ -92,7 +92,7 @@
      :add-todo!           (fn [& args]
                             (apply add-todo! (concat [state] args)))}))
 
-(defn todo-item-state [{:keys [toggle-todo! delete-todo! save-todo!]} id]
+(defn todo-item-state [{:keys [toggle-todo! delete-todo! save-todo!]} {:keys [id] :as item}]
   (let [state (r/atom {:editing? false})]
     {:editing?      (reaction (:editing? @state))
      :set-editing!  #(swap! state assoc :editing? true)
@@ -123,6 +123,5 @@
 
     (clear-done!)
 
-
-
     #_@items))
+
