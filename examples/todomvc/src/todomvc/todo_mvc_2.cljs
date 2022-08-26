@@ -74,8 +74,8 @@
                  :on-save save!
                  :on-stop stop-editing!}])])
 
-(defn todo-item [item app-state]
-  (let [state (v2s/todo-item-state app-state item)]
+(defn todo-item [item {:keys [todo-item-state]}]
+  (let [state (todo-item-state (:id item))]
     [todo-item* item state]))
 
 (defn todo-stats [{:keys [current-filter set-current-filter! num-active num-done

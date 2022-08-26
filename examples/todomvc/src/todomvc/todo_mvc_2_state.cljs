@@ -46,18 +46,20 @@
            [k (assoc v :done done?)]))
     (into {})))
 
+(defn todo-item-state
+  "State interface that deals with a todo item."
+  [state todo-k id]
+  {:toggle!       #(swap! state update-in [todo-k id :done] not)
+   :save!         #(swap! state assoc-in [todo-k id :title] %)
+   :delete!       #(swap! state update todo-k (fn [todos] (dissoc todos id)))
+   :set-editing!  #(swap! state assoc-in [todo-k id :editing?] true)
+   :stop-editing! #(swap! state assoc-in [todo-k id :editing?] false)
+   :editing?      (reaction (get-in @state [todo-k id :editing?]))})
+
 (defn todo-app-state [props]
   (let [state (r/atom {:todos          {}
                        :id-counter     0
                        :current-filter :all})
-        toggle-todo! (fn [id]
-                       (swap! state update-in [:todos id :done] not))
-        save-todo! (fn [id title]
-                     (swap! state assoc-in [:todos id :title] title))
-        delete-todo! (fn [id]
-                       (swap! state update :todos #(dissoc % id)))
-        clear-done! (fn []
-                      (swap! state update :todos remove-done))
         items (reaction (-> @state :todos vals))
         num-done (reaction (->> @items (filter :done) count))
         current-filter (reaction (:current-filter @state))
@@ -66,7 +68,6 @@
      :empty-todos?        (reaction (-> @items empty?))
      :num-done            num-done
      :num-active          num-active
-
      :current-filter      current-filter
      :filtered-items      (reaction
                             (filter
@@ -75,29 +76,13 @@
                                 :done :done
                                 :all identity)
                               @items))
-
      :set-current-filter! #(swap! state assoc :current-filter %)
-
-     :complete-all!      (fn []
-                           (swap! state update :todos (fn [todos]
-                                                        (complete-all todos (pos? @num-active)))))
-     :clear-done!         clear-done!
-     :delete-todo!        delete-todo!
-     :toggle-todo!        toggle-todo!
-     :save-todo!          save-todo!
-     :set-editing!        (fn [id editing?]
-                            (swap! state update-in :todos [id :editing?] editing?))
+     :complete-all!       #(swap! state update :todos (fn [todos]
+                                                        (complete-all todos (pos? @num-active))))
+     :clear-done!         #(swap! state update :todos remove-done)
+     :todo-item-state     #(todo-item-state state :todos %)
      :add-todo!           (fn [& args]
                             (apply add-todo! (concat [state] args)))}))
-
-(defn todo-item-state [{:keys [toggle-todo! delete-todo! save-todo!]} {:keys [id] :as item}]
-  (let [state (r/atom {:editing? false})]
-    {:editing?      (reaction (:editing? @state))
-     :set-editing!  #(swap! state assoc :editing? true)
-     :stop-editing! #(swap! state assoc :editing? false)
-     :save!         #(save-todo! id %)
-     :toggle!       #(toggle-todo! id)
-     :delete!       #(delete-todo! id)}))
 
 (defn app-state-with-defaults! [props]
   (let [{:keys [add-todo!] :as app-state} (todo-app-state props)]
