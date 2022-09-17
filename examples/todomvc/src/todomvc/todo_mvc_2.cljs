@@ -2,7 +2,8 @@
   (:require
     [cljs.spec.alpha :as s]
     [reagent.dom :as rdom]
-    [todomvc.todo-mvc-2-state :as v2s]))
+    [todomvc.todo-mvc-2-state :as v2s]
+    [todomvc.todo-mvc-2-spec :as spec]))
 
 
 (s/def ::placeholder string?)
@@ -15,15 +16,15 @@
                             :req-un [::on-input-blur
                                      ::on-input-changed
                                      ::on-input-key-down
-                                     ::v2s/text
-                                     ::v2s/set-text!]))
+                                     ::spec/text
+                                     ::spec/set-text!]))
 
 (s/def ::todo-input-props (s/keys :req-un []
                                   :opt-un [::id ::placeholder ::class]))
 
 (s/fdef todo-input*
   :args (s/cat :props ::todo-input-props
-               :state ::v2s/todo-input-state)
+               :state ::spec/todo-input-state)
   :ret vector?)
 
 ;;F1 component, Unit testable
