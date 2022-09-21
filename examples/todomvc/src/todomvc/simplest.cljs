@@ -10,8 +10,10 @@
                        :last-name ""})
         first-name (reaction (:first-name @state))
         last-name (reaction (:last-name @state))
-        on-fname-change #(swap! state assoc :first-name (-> % .-target .-value))
-        on-lname-change #(swap! state assoc :last-name (-> % .-target .-value))]
+        set-first-name! #(swap! state assoc :first-name %)
+        set-last-name! #(swap! state assoc :last-name %)
+        on-fname-change #(set-first-name! (-> % .-target .-value))
+        on-lname-change #(set-last-name! (-> % .-target .-value))]
     (fn []
       [:div
        [:h3 (str "Hello, " @first-name " " @last-name)]
