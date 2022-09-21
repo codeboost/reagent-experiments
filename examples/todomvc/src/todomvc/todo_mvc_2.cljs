@@ -59,25 +59,35 @@
 (def todo-edit (with-meta todo-input
                           {:component-did-mount #(.focus (rdom/dom-node %))}))
 
+(defn todo-item-adapter
+  "Abstracts away the concrete state."
+  [{:keys [editing? set-editing! toggle! delete! save! stop-editing!] :as state}]
+  {:input-on-change toggle!
+   :label-on-double-click set-editing!
+   :button-on-click delete!
+   :edit-on-save save!
+   :edit-on-stop stop-editing!
+   :editing? editing?})
 
-(defn todo-item* [{:keys [id done title]} {:keys [editing? set-editing! toggle! delete! save! stop-editing!]}]
+(defn todo-item* [{:keys [id done title]} {:keys [editing? input-on-change label-on-double-click button-on-click
+                                                  edit-on-save edit-on-stop]}]
   [:li {:class (str (if done "completed ")
                     (if @editing? "editing"))}
    [:div.view
     [:input.toggle {:type      "checkbox"
                     :checked   done
-                    :on-change toggle!}]
-    [:label {:on-double-click set-editing!} title]
-    [:button.destroy {:on-click delete!}]]
+                    :on-change input-on-change}]
+    [:label {:on-double-click label-on-double-click} title]
+    [:button.destroy {:on-click button-on-click}]]
    (when @editing?
      [todo-edit {:class   "edit"
                  :title title
-                 :on-save save!
-                 :on-stop stop-editing!}])])
+                 :on-save edit-on-save
+                 :on-stop edit-on-stop}])])
 
 (defn todo-item [item {:keys [todo-item-state]}]
   (let [state (todo-item-state (:id item))]
-    [todo-item* item state]))
+    [todo-item* item (todo-item-adapter state)]))
 
 (defn todo-stats [{:keys [current-filter set-current-filter! num-active num-done
                           clear-done!]}]
