@@ -3,6 +3,7 @@
             [reagent.dom :as rdom]
             [clojure.string :as str]
             [todomvc.todo-mvc-2 :as v2]
+            [todomvc.simplest :as simplest]
             [cljs.spec.test.alpha :as ts]))
 
 (defonce todos (r/atom (sorted-map)))
@@ -112,9 +113,11 @@
 
 (defn todo-app-combined []
   [:div
-   [todo-app]
-   [:hr]
-   [v2/todo-app]])
+   [simplest/component]]
+  #_[:div
+     [todo-app]
+     [:hr]
+     [v2/todo-app]])
 
 (defn ^:export run []
   (rdom/render [todo-app-combined] (js/document.getElementById "app")))
