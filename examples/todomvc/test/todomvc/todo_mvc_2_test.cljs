@@ -2,7 +2,7 @@
   (:require
     [cljs.test :refer [deftest is testing]]
     [todomvc.todo-mvc-2 :as mvc2]
-    [todomvc.todo-mvc-2-state :as state]))
+    [todomvc.todo-mvc-2-state :as v2s]))
 
 (defn counted-fn
   "Returns a map with keys `title`-calls and `title`-fn.
@@ -25,8 +25,8 @@
   (let [{:keys [on-save-calls on-save-fn]} (counted-fn :on-save nil)
         {:keys [on-stop-calls on-stop-fn]}  (counted-fn :on-stop nil)
         {:keys [set-text! text save!]}
-        (state/todo-input-state {:on-stop on-stop-fn
-                                 :on-save on-save-fn})]
+        (v2s/todo-input-state {:on-stop on-stop-fn
+                               :on-save on-save-fn})]
     (testing "set-text! should change the text"
       (is (= @text nil))
       (set-text! "My text   ")
@@ -41,7 +41,7 @@
 ;;This demonstrates how to test the 'state adapter' - eg. the state expanded with the dom event handlers.
 (deftest todo-input-state-adapter-test
   (let [{:keys [on-save-calls on-save-fn]} (counted-fn :on-save nil)
-        {:keys [text] :as tis} (state/todo-input-state {:on-save on-save-fn})
+        {:keys [text] :as tis} (v2s/todo-input-state {:on-save on-save-fn})
         {:keys [on-input-changed on-input-blur on-input-key-down]} (mvc2/input-state-adapter tis)]
 
     (testing "Text should be updated on input-changed"
@@ -51,7 +51,37 @@
     (testing "Should call on-save on input blur and clear the text"
       (on-input-blur)
       (is (= [["My text"]] @on-save-calls))
-      (is (= "" @text)))))
+      (is (= "" @text)))
+
+    (testing "On escape it should clear the text"
+      (on-input-changed (clj->js {:target {:value "Something"}}))
+      (is (= @text "Something"))
+      (on-input-key-down (clj->js {:which 27}))
+      (is (= @text "")))))
+
+(deftest todo-input-component-test
+  (let [{:keys [on-save-calls on-save-fn]} (counted-fn :on-save nil)
+        {:keys [on-stop-calls on-stop-fn]}  (counted-fn :on-stop nil)
+        {:keys [text] :as tis} (v2s/todo-input-state {:on-save on-save-fn
+                                                      :on-stop on-stop-fn})
+        {:keys [on-input-changed on-input-blur on-input-key-down] :as state} (mvc2/input-state-adapter tis)
+        component (mvc2/todo-input {:on-save on-save-fn
+                                    :on-stop on-stop-fn})]
+
+    (mvc2/todo-input* {:id "id"
+                       :class "class"
+                       :placeholder "nothing"} state)
+    #_(reagent.dom/render [component {:id "id"
+                                      :class "class"
+                                      :placeholder "nothing"}] (. js/document (createElement "div")))))
+
+
+(deftest todo-item-test
+  (let [{:keys [items todo-item-state] :as state} (v2s/app-state-with-defaults! {})
+        item-state (todo-item-state 1)]
+    (mvc2/todo-item* (first @items) item-state)))
+
+
 
 
 
